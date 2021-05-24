@@ -33,6 +33,11 @@ class Task2Dot4(Scene):
 
 
 class FBDs(Scene):
+
+    def __init__(self, **kwargs):
+        Scene.__init__(self, **kwargs)
+        self.inclineAngle = self.degToRad(15) #exaggerated for FBD
+
     def degToRad(self, degrees: float) -> float:
         return degrees * PI / 180
 
@@ -50,7 +55,7 @@ class FBDs(Scene):
         weightForce = Arrow(start=ORIGIN, end=DOWN * 2, color=BLUE)
         tensionForce = Arrow(start=ORIGIN, end=UP * 2, color=BLUE)
         # self.add(square) #Adds the square to the scene
-        weightLabel = MathTex("m_{s}g", color=BLUE).next_to(weightForce, DOWN,)
+        weightLabel = MathTex("m_{s}g", color=BLUE).next_to(weightForce, DOWN)
         tensionLabel = Tex("T", color=BLUE).next_to(tensionForce, UP)
 
         cs = self.generateCS().next_to(square, LEFT)
@@ -64,10 +69,34 @@ class FBDs(Scene):
         self.play(Write(weightLabel), Write(tensionLabel))
         self.wait(2)
         self.play(group.animate.scale(0.4))
-        self.play(group.animate.shift(LEFT * 5))
+        self.play(group.animate.shift(LEFT * 5.1 + DOWN * 1.5))
 
+    def cartFBD(self):
+        cart = Rectangle(height=1.5, width=2).rotate(self.inclineAngle, about_point=ORIGIN)
+
+        normalForce = Arrow(start=ORIGIN, end=UP*2, color=ORANGE).rotate(self.inclineAngle, about_point=ORIGIN)
+        weightForce = Arrow(start=ORIGIN, end=DOWN*2, color=ORANGE)
+        tensionForce = Arrow(start=ORIGIN, end=RIGHT * 2, color=ORANGE).rotate(self.inclineAngle, about_point=ORIGIN)
+
+        normalLabel = Tex("N", color=ORANGE).next_to(normalForce, UP)
+        weightLabel = MathTex("m_{s}g", color=ORANGE).next_to(weightForce, DOWN)
+        tensionLabel = Tex("T", color=ORANGE).next_to(tensionForce, RIGHT)
+
+        cs = self.generateCS().next_to(cart, LEFT).rotate(self.inclineAngle)
+
+        title = Tex("FBD of Cart").next_to(normalLabel, UP)
+
+        group = Group(title, cart, normalForce, weightForce, tensionForce, normalLabel, weightLabel, tensionLabel, cs)
+
+        self.play(Write(title), GrowFromCenter(cart))
+        self.play(FadeIn(normalForce), FadeIn(weightForce), FadeIn(tensionForce), FadeIn(cs))
+        self.play(Write(normalLabel), Write(weightLabel), Write(tensionLabel))
+        self.wait(2)
+        self.play(group.animate.scale(0.4))
+        self.play(group.animate.shift(LEFT * 5 + UP * 1.5))
 
     def construct(self):
+        self.cartFBD()
         self.suspendedMassFBD()
 
 
