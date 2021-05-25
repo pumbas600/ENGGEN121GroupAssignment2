@@ -31,50 +31,23 @@ class Task2Dot4(Scene):
         self.wait(0.2)
         self.play(Write(equation[2]), run_time=2)
 
-class MovingAngle(Scene):
-    def construct(self):
-        rotation_center = LEFT
-
-        theta_tracker = ValueTracker(110)
-        line1 = Line(LEFT, RIGHT)
-        line_moving = Line(LEFT, RIGHT)
-        line_ref = line_moving.copy()
-        line_moving.rotate(
-            theta_tracker.get_value() * DEGREES, about_point=rotation_center
-        )
-        a = Angle(line1, line_moving, radius=0.5, other_angle=False)
-        te = MathTex(r"\theta").next_to(a, RIGHT)
-
-        self.add(line1, line_moving, a, te)
-        self.wait()
-
-        line_moving.add_updater(
-            lambda x: x.become(line_ref.copy()).rotate(
-                theta_tracker.get_value() * DEGREES, about_point=rotation_center
-            )
-        )
-
-        a.add_updater(
-            lambda x: x.become(Angle(line1, line_moving, radius=0.5, other_angle=False))
-        )
-        te.add_updater(
-            lambda x: x.move_to(
-                Angle(
-                    line1, line_moving, radius=0.5 + 3 * SMALL_BUFF, other_angle=False
-                ).point_from_proportion(0.5)
-            )
-        )
-
-        self.play(theta_tracker.animate.set_value(40))
-        self.play(theta_tracker.animate.increment_value(140))
-        self.play(te.animate.set_color(RED), run_time=0.5)
-        self.play(theta_tracker.animate.set_value(350))
-
 class FBDs(Scene):
 
     def __init__(self, **kwargs):
         Scene.__init__(self, **kwargs)
         self.inclineAngle = self.degToRad(15) #exaggerated for FBD
+        self.cartFBDGroup = None
+        self.suspendedMassFBDGroup = None
+
+        self.cartHighlightColour = ORANGE
+        self.suspendedMassHighlightColour = BLUE
+
+        self.texToColourMap = {
+            '=': LIGHT_BROWN,
+            '+': LIGHT_BROWN,
+            '-': LIGHT_BROWN,
+            '\Rightarrow': LIGHT_BROWN
+        }
 
     def degToRad(self, degrees: float) -> float:
         return degrees * PI / 180
@@ -94,35 +67,39 @@ class FBDs(Scene):
     def suspendedMassFBD(self):
         square = Square(radius=1)
         # Buff is the distance of the arrow from its start and end points, for example if you didn't want it directly against that
-        weightForce = Arrow(start=ORIGIN, end=DOWN * 2, color=BLUE)
-        tensionForce = Arrow(start=ORIGIN, end=UP * 2, color=BLUE)
+        weightForce = Arrow(start=ORIGIN, end=DOWN * 2, color=self.suspendedMassHighlightColour)
+        tensionForce = Arrow(start=ORIGIN, end=UP * 2, color=self.suspendedMassHighlightColour)
         # self.add(square) #Adds the square to the scene
-        weightLabel = MathTex("m_{s}g", color=BLUE).next_to(weightForce, DOWN)
-        tensionLabel = Tex("T", color=BLUE).next_to(tensionForce, UP)
+        weightLabel = MathTex("m_{s}g", color=self.suspendedMassHighlightColour).next_to(weightForce, DOWN)
+        tensionLabel = Tex("T", color=self.suspendedMassHighlightColour).next_to(tensionForce, UP)
 
         cs = self.generateCS().next_to(square, LEFT)
 
         title = Tex("FBD of Suspended Mass").next_to(tensionLabel, UP)
 
-        group = Group(title, square, weightForce, tensionForce, weightLabel, tensionLabel, cs)
+        self.suspendedMassFBDGroup = Group(title, square, weightForce, tensionForce, weightLabel, tensionLabel, cs)
 
         self.play(Write(title), GrowFromCenter(square))
         self.play(FadeIn(weightForce), FadeIn(tensionForce), FadeIn(cs))
         self.play(Write(weightLabel), Write(tensionLabel))
         self.wait(2)
-        self.play(group.animate.scale(0.4))
-        self.play(group.animate.shift(LEFT * 5.1 + DOWN * 1.5))
+        self.play(self.suspendedMassFBDGroup.animate.scale(0.4))
+        self.play(self.suspendedMassFBDGroup.animate.shift(LEFT * 5.1 + DOWN * 1.5))
 
     def cartFBD(self):
         cart = Rectangle(height=1.5, width=2).rotate(self.inclineAngle, about_point=ORIGIN)
 
-        normalForce = Arrow(start=ORIGIN, end=UP*2, color=ORANGE).rotate(self.inclineAngle, about_point=ORIGIN)
-        weightForce = Arrow(start=ORIGIN, end=DOWN*2, color=ORANGE)
-        tensionForce = Arrow(start=ORIGIN, end=RIGHT * 2, color=ORANGE).rotate(self.inclineAngle, about_point=ORIGIN)
+        normalForce = Arrow(
+            start=ORIGIN, end=UP*2, color=self.cartHighlightColour
+        ).rotate(self.inclineAngle, about_point=ORIGIN)
+        weightForce = Arrow(start=ORIGIN, end=DOWN*2, color=self.cartHighlightColour)
+        tensionForce = Arrow(
+            start=ORIGIN, end=RIGHT * 2, color=self.cartHighlightColour
+        ).rotate(self.inclineAngle, about_point=ORIGIN)
 
-        normalLabel = Tex("N", color=ORANGE).next_to(normalForce, UP)
-        weightLabel = MathTex("m_{c}g", color=ORANGE).next_to(weightForce, DOWN)
-        tensionLabel = Tex("T", color=ORANGE).next_to(tensionForce, RIGHT)
+        normalLabel = Tex("N", color=self.cartHighlightColour).next_to(normalForce, UP)
+        weightLabel = MathTex("m_{c}g", color=self.cartHighlightColour).next_to(weightForce, DOWN)
+        tensionLabel = Tex("T", color=self.cartHighlightColour).next_to(tensionForce, RIGHT)
 
         surfaceLine = Line(start=LEFT * 2, end=RIGHT * 2).rotate(self.inclineAngle).shift(DOWN * 0.78)
         referenceLine = Line(start=surfaceLine.get_start(), end=surfaceLine.get_start() + RIGHT * 1.7)
@@ -135,7 +112,7 @@ class FBDs(Scene):
 
         title = Tex("FBD of Cart").next_to(normalLabel, UP)
 
-        fbdGroup = Group(title, cart, normalForce, weightForce, tensionForce, normalLabel, weightLabel, tensionLabel, cs,
+        self.cartFBDGroup = VGroup(title, cart, normalForce, weightForce, tensionForce, normalLabel, weightLabel, tensionLabel, cs,
                       angleGroup)
         self.play(
             Write(title), Write(theta), FadeIn(angle), Create(surfaceLine), Create(referenceLine), GrowFromCenter(cart)
@@ -147,11 +124,40 @@ class FBDs(Scene):
             Write(normalLabel), Write(weightLabel), Write(tensionLabel)
         )
         self.wait(2)
-        self.play(fbdGroup.animate.scale(0.4))
-        self.play(fbdGroup.animate.shift(LEFT * 5 + UP * 1.5))
+        self.play(self.cartFBDGroup.animate.scale(0.4))
+        self.play(self.cartFBDGroup.animate.shift(LEFT * 5 + UP * 1.5))
+
+    def suspendedCartCalculations(self):
+        equations = MathTex(
+            r'\sum F_{sy} = m_{s}a_{sy}', r'\Rightarrow T - m_{s}g = m_{s}a_{sy}\\',
+            r'\Rightarrow T = m_{s}a_{sy} + m_{s}g', tex_to_color_map=self.texToColourMap
+        ).move_to(RIGHT)
+
+        circle = Circle(radius=0.2, color=WHITE).next_to(equations[2], RIGHT)
+        number = Tex('1').scale(0.6).move_to(circle.get_center())
+        tensionEquation = VGroup(equations[2], circle, number)
+
+        equationSurroundingBox1 = SurroundingRectangle(equations[0])
+        equationSurroundingBox2 = SurroundingRectangle(tensionEquation, color=self.suspendedMassHighlightColour)
+
+        self.play(self.suspendedMassFBDGroup.animate.scale(1.3))
+        self.play(FadeIn(equations[0]))
+        self.play(Create(equationSurroundingBox1))
+        self.wait(0.2)
+        self.play(Write(equations[1]), run_time=2)
+        self.play(FadeOut(equationSurroundingBox1))
+        self.wait(0.2)
+        self.play(Write(equations[2]), run_time=2)
+        self.play(Create(circle), Create(number))
+        self.play(
+            FadeOut(equations[0]), FadeOut(equations[1]), Create(equationSurroundingBox2)
+        )
+        self.play((tensionEquation + equationSurroundingBox2).animate.shift(UP * 2))
+        self.play(FadeOut(equationSurroundingBox2))
 
     def construct(self):
-        self.cartFBD()
+        #self.cartFBD()
         self.suspendedMassFBD()
+        self.suspendedCartCalculations()
 
 
