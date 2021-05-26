@@ -1,5 +1,6 @@
 from manim import *
 
+
 class GenerateSphere(Scene):
     def construct(self):
         circle = Circle()
@@ -12,6 +13,7 @@ class GenerateSphere(Scene):
         self.play(Create(square))
         self.play(Transform(square, circle))
         self.play(FadeOut(square))
+
 
 class Task2Dot4(Scene):
     def construct(self):
@@ -31,11 +33,12 @@ class Task2Dot4(Scene):
         self.wait(0.2)
         self.play(Write(equation[2]), run_time=2)
 
+
 class FBDs(Scene):
 
     def __init__(self, **kwargs):
         Scene.__init__(self, **kwargs)
-        self.inclineAngle = self.degToRad(15) #exaggerated for FBD
+        self.inclineAngle = self.degToRad(15)  # exaggerated for FBD
         self.cartFBDGroup = None
         self.suspendedMassFBDGroup = None
 
@@ -46,19 +49,24 @@ class FBDs(Scene):
             '=': LIGHT_BROWN,
             '+': LIGHT_BROWN,
             '-': LIGHT_BROWN,
-            '\Rightarrow': LIGHT_BROWN
+            r'\Rightarrow': LIGHT_BROWN
         }
 
     def degToRad(self, degrees: float) -> float:
         return degrees * PI / 180
 
-    def generateCS(self) -> Group:
+    def generateCS(self) -> VGroup:
         x = Arrow(start=ORIGIN, end=RIGHT, buff=0)
         y = Arrow(start=ORIGIN, end=UP, buff=0)
         xLabel = Tex("x").scale(0.8).next_to(x, RIGHT)
         yLabel = Tex("y").scale(0.8).next_to(y, UP)
 
-        return Group(x, y, xLabel, yLabel)
+        return VGroup(x, y, xLabel, yLabel)
+
+    def createEquationNumber(self, number, colour=WHITE) -> VGroup:
+        circle = Circle(radius=0.2, color=colour)
+        number = Tex(str(number)).scale(0.6).move_to(circle.get_center())
+        return VGroup(circle, number)
 
     def displayNumberPlane(self):
         numberPlane = NumberPlane()
@@ -66,7 +74,8 @@ class FBDs(Scene):
 
     def suspendedMassFBD(self):
         square = Square(radius=1)
-        # Buff is the distance of the arrow from its start and end points, for example if you didn't want it directly against that
+        # Buff is the distance of the arrow from its start and end points,
+        # for example if you didn't want it directly against that
         weightForce = Arrow(start=ORIGIN, end=DOWN * 2, color=self.suspendedMassHighlightColour)
         tensionForce = Arrow(start=ORIGIN, end=UP * 2, color=self.suspendedMassHighlightColour)
         # self.add(square) #Adds the square to the scene
@@ -90,9 +99,9 @@ class FBDs(Scene):
         cart = Rectangle(height=1.5, width=2).rotate(self.inclineAngle, about_point=ORIGIN)
 
         normalForce = Arrow(
-            start=ORIGIN, end=UP*2, color=self.cartHighlightColour
+            start=ORIGIN, end=UP * 2, color=self.cartHighlightColour
         ).rotate(self.inclineAngle, about_point=ORIGIN)
-        weightForce = Arrow(start=ORIGIN, end=DOWN*2, color=self.cartHighlightColour)
+        weightForce = Arrow(start=ORIGIN, end=DOWN * 2, color=self.cartHighlightColour)
         tensionForce = Arrow(
             start=ORIGIN, end=RIGHT * 2, color=self.cartHighlightColour
         ).rotate(self.inclineAngle, about_point=ORIGIN)
@@ -104,7 +113,7 @@ class FBDs(Scene):
         surfaceLine = Line(start=LEFT * 2, end=RIGHT * 2).rotate(self.inclineAngle).shift(DOWN * 0.78)
         referenceLine = Line(start=surfaceLine.get_start(), end=surfaceLine.get_start() + RIGHT * 1.7)
         angle = Angle(referenceLine, surfaceLine, radius=1.3, other_angle=False)
-        theta =  MathTex(r"\theta").next_to(angle, RIGHT).scale(0.7)
+        theta = MathTex(r"\theta").next_to(angle, RIGHT).scale(0.7)
 
         angleGroup = Group(surfaceLine, referenceLine, angle, theta)
 
@@ -112,8 +121,9 @@ class FBDs(Scene):
 
         title = Tex("FBD of Cart").next_to(normalLabel, UP)
 
-        self.cartFBDGroup = VGroup(title, cart, normalForce, weightForce, tensionForce, normalLabel, weightLabel, tensionLabel, cs,
-                      angleGroup)
+        self.cartFBDGroup = VGroup(title, cart, normalForce, weightForce, tensionForce, normalLabel, weightLabel,
+                                   tensionLabel, cs,
+                                   angleGroup)
         self.play(
             Write(title), Write(theta), FadeIn(angle), Create(surfaceLine), Create(referenceLine), GrowFromCenter(cart)
         )
@@ -133,9 +143,8 @@ class FBDs(Scene):
             r'\Rightarrow T = m_{s}a_{sy} + m_{s}g', tex_to_color_map=self.texToColourMap
         ).move_to(RIGHT)
 
-        circle = Circle(radius=0.2, color=WHITE).next_to(equations[2], RIGHT)
-        number = Tex('1').scale(0.6).move_to(circle.get_center())
-        tensionEquation = VGroup(equations[2], circle, number)
+        equationNumber = self.createEquationNumber(1).next_to(equations[2], RIGHT)
+        tensionEquation = VGroup(equations[2], equationNumber)
 
         equationSurroundingBox1 = SurroundingRectangle(equations[0])
         equationSurroundingBox2 = SurroundingRectangle(tensionEquation, color=self.suspendedMassHighlightColour)
@@ -148,16 +157,21 @@ class FBDs(Scene):
         self.play(FadeOut(equationSurroundingBox1))
         self.wait(0.2)
         self.play(Write(equations[2]), run_time=2)
-        self.play(Create(circle), Create(number))
+        self.play(Create(equationNumber))
         self.play(
             FadeOut(equations[0]), FadeOut(equations[1]), Create(equationSurroundingBox2)
         )
         self.play((tensionEquation + equationSurroundingBox2).animate.shift(UP * 2))
         self.play(FadeOut(equationSurroundingBox2))
 
+    def cartCalculations(self):
+        equations = MathTex(r'\sum F_{cx} = m_{c}a_{cx}', r'\Rightarrow T - m_{c}gsin\theta = m_{c}a_{cx}',
+                            tex_to_color_map=self.texToColourMap)
+        self.play(Write(equations))
+
+
     def construct(self):
         #self.cartFBD()
-        self.suspendedMassFBD()
-        self.suspendedCartCalculations()
-
-
+        #self.suspendedMassFBD()
+        #self.suspendedCartCalculations()
+        self.cartCalculations()
