@@ -44,12 +44,17 @@ class FBDs(Scene):
 
         self.cartHighlightColour = ORANGE
         self.suspendedMassHighlightColour = BLUE
+        self.operatorColour = '#fcc088'
 
         self.texToColourMap = {
-            '=': LIGHT_BROWN,
-            '+': LIGHT_BROWN,
-            '-': LIGHT_BROWN,
-            r'\Rightarrow': LIGHT_BROWN
+            '=': self.operatorColour,
+            '+': self.operatorColour,
+            '-': self.operatorColour,
+            r'\Rightarrow': self.operatorColour,
+            '_{c}': self.cartHighlightColour,
+            '_{cx}': self.cartHighlightColour,
+            '_{s}': self.suspendedMassHighlightColour,
+            '_{sy}': self.suspendedMassHighlightColour
         }
 
     def degToRad(self, degrees: float) -> float:
@@ -79,8 +84,8 @@ class FBDs(Scene):
         weightForce = Arrow(start=ORIGIN, end=DOWN * 2, color=self.suspendedMassHighlightColour)
         tensionForce = Arrow(start=ORIGIN, end=UP * 2, color=self.suspendedMassHighlightColour)
         # self.add(square) #Adds the square to the scene
-        weightLabel = MathTex("m_{s}g", color=self.suspendedMassHighlightColour).next_to(weightForce, DOWN)
-        tensionLabel = Tex("T", color=self.suspendedMassHighlightColour).next_to(tensionForce, UP)
+        weightLabel = MathTex('m_{s}g', color=self.suspendedMassHighlightColour).next_to(weightForce, DOWN)
+        tensionLabel = Tex('T', color=self.suspendedMassHighlightColour).next_to(tensionForce, UP)
 
         cs = self.generateCS().next_to(square, LEFT)
 
@@ -139,39 +144,42 @@ class FBDs(Scene):
 
     def suspendedCartCalculations(self):
         equations = MathTex(
-            r'\sum F_{sy} = m_{s}a_{sy}', r'\Rightarrow T - m_{s}g = m_{s}a_{sy}\\',
-            r'\Rightarrow T = m_{s}a_{sy} + m_{s}g', tex_to_color_map=self.texToColourMap
+            r'\sum F','_{sy}', '=', 'm','_{s}','a','_{sy}', r'\Rightarrow', 'T' ,'-' ,'m', '_{s}','g', '=' ,'m','_{s}',
+            'a','_{sy}',r'\\ \Rightarrow', 'T' ,'=' , 'm', '_{s}', 'a', '_{sy}', '+', 'm', '_{s}', 'g',
+            tex_to_color_map=self.texToColourMap
         ).move_to(RIGHT)
 
-        equationNumber = self.createEquationNumber(1).next_to(equations[2], RIGHT)
-        tensionEquation = VGroup(equations[2], equationNumber)
+        equationNumber = self.createEquationNumber(1).next_to(equations[18:], RIGHT)
+        tensionEquation = VGroup(equations[18:], equationNumber)
 
-        equationSurroundingBox1 = SurroundingRectangle(equations[0])
+        equationSurroundingBox1 = SurroundingRectangle(equations[0:7])
         equationSurroundingBox2 = SurroundingRectangle(tensionEquation, color=self.suspendedMassHighlightColour)
 
         self.play(self.suspendedMassFBDGroup.animate.scale(1.3))
-        self.play(FadeIn(equations[0]))
+        self.play(FadeIn(equations[0:7]))
         self.play(Create(equationSurroundingBox1))
         self.wait(0.2)
-        self.play(Write(equations[1]), run_time=2)
+        self.play(Write(equations[7:18]), run_time=2)
         self.play(FadeOut(equationSurroundingBox1))
         self.wait(0.2)
-        self.play(Write(equations[2]), run_time=2)
+        self.play(Write(equations[18:]), run_time=2)
         self.play(Create(equationNumber))
-        self.play(
-            FadeOut(equations[0]), FadeOut(equations[1]), Create(equationSurroundingBox2)
-        )
-        self.play((tensionEquation + equationSurroundingBox2).animate.shift(UP * 2))
+        self.play(FadeOut(equations[0:18]), Create(equationSurroundingBox2))
+        self.play((tensionEquation + equationSurroundingBox2).animate.shift(UP * 4))
+        tensionEquation -= equationSurroundingBox2
         self.play(FadeOut(equationSurroundingBox2))
 
     def cartCalculations(self):
-        equations = MathTex(r'\sum F_{cx} = m_{c}a_{cx}', r'\Rightarrow T - m_{c}gsin\theta = m_{c}a_{cx}',
+        equations = MathTex(r'\sum F','_{cx}', '=', 'm','_{c}','a','_{cx}', r'\Rightarrow', r'T', '-', 'm', '_{c}',
+                            r'gsin\theta','=', 'm','_{c}','a','_{cx}',
                             tex_to_color_map=self.texToColourMap)
-        self.play(Write(equations))
+        self.play(Write(equations[0:7]))
+        self.wait()
+        self.play(Write(equations[7:]))
 
 
     def construct(self):
         #self.cartFBD()
-        #self.suspendedMassFBD()
-        #self.suspendedCartCalculations()
-        self.cartCalculations()
+        self.suspendedMassFBD()
+        self.suspendedCartCalculations()
+        #self.cartCalculations()
