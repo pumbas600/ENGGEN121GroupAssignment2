@@ -57,6 +57,9 @@ class FBDs(Scene):
             '_{sy}': self.suspendedMassHighlightColour
         }
 
+        self.accelerationConstraintEquation = None
+        self.tensionEquation = None
+
     def degToRad(self, degrees: float) -> float:
         return degrees * PI / 180
 
@@ -120,15 +123,14 @@ class FBDs(Scene):
         angle = Angle(referenceLine, surfaceLine, radius=1.3, other_angle=False)
         theta = MathTex(r"\theta").next_to(angle, RIGHT).scale(0.7)
 
-        angleGroup = Group(surfaceLine, referenceLine, angle, theta)
+        angleGroup = VGroup(surfaceLine, referenceLine, angle, theta)
 
         cs = self.generateCS().next_to(cart, LEFT).rotate(self.inclineAngle)
 
         title = Tex("FBD of Cart").next_to(normalLabel, UP)
 
         self.cartFBDGroup = VGroup(title, cart, normalForce, weightForce, tensionForce, normalLabel, weightLabel,
-                                   tensionLabel, cs,
-                                   angleGroup)
+                                   tensionLabel, cs, angleGroup)
         self.play(
             Write(title), Write(theta), FadeIn(angle), Create(surfaceLine), Create(referenceLine), GrowFromCenter(cart)
         )
@@ -144,42 +146,77 @@ class FBDs(Scene):
 
     def suspendedCartCalculations(self):
         equations = MathTex(
-            r'\sum F','_{sy}', '=', 'm','_{s}','a','_{sy}', r'\Rightarrow', 'T' ,'-' ,'m', '_{s}','g', '=' ,'m','_{s}',
-            'a','_{sy}',r'\\ \Rightarrow', 'T' ,'=' , 'm', '_{s}', 'a', '_{sy}', '+', 'm', '_{s}', 'g',
+            r'\sum F', '_{sy}', '=', 'm', '_{s}', 'a', '_{sy}', r'\Rightarrow', 'T', '-', 'm', '_{s}', 'g', '=', 'm', '_{s}',
+            'a', '_{sy}', r'\\', r'\Rightarrow', 'T', '=', 'm', '_{s}', 'a', '_{sy}', '+', 'm', '_{s}', 'g',
             tex_to_color_map=self.texToColourMap
         ).move_to(RIGHT)
 
-        equationNumber = self.createEquationNumber(1).next_to(equations[18:], RIGHT)
-        tensionEquation = VGroup(equations[18:], equationNumber)
+        equationNumber = self.createEquationNumber(2).next_to(equations[19:], RIGHT)
+        self.tensionEquation = VGroup(equations[19:], equationNumber)
 
         equationSurroundingBox1 = SurroundingRectangle(equations[0:7])
-        equationSurroundingBox2 = SurroundingRectangle(tensionEquation, color=self.suspendedMassHighlightColour)
+        equationSurroundingBox2 = SurroundingRectangle(self.tensionEquation, color=self.suspendedMassHighlightColour)
 
         self.play(self.suspendedMassFBDGroup.animate.scale(1.3))
         self.play(FadeIn(equations[0:7]))
         self.play(Create(equationSurroundingBox1))
         self.wait(0.2)
-        self.play(Write(equations[7:18]), run_time=2)
+        self.play(Write(equations[7:19]), run_time=2)
         self.play(FadeOut(equationSurroundingBox1))
         self.wait(0.2)
-        self.play(Write(equations[18:]), run_time=2)
+        self.play(Write(equations[19:]), run_time=2)
         self.play(Create(equationNumber))
-        self.play(FadeOut(equations[0:18]), Create(equationSurroundingBox2))
-        self.play((tensionEquation + equationSurroundingBox2).animate.shift(UP * 4))
-        tensionEquation -= equationSurroundingBox2
+        self.play(FadeOut(equations[0:19]), Create(equationSurroundingBox2))
+        self.play((self.tensionEquation + equationSurroundingBox2).animate.shift(UP * 4))
         self.play(FadeOut(equationSurroundingBox2))
 
     def cartCalculations(self):
-        equations = MathTex(r'\sum F','_{cx}', '=', 'm','_{c}','a','_{cx}', r'\Rightarrow', r'T', '-', 'm', '_{c}',
-                            r'gsin\theta','=', 'm','_{c}','a','_{cx}',
+        equations = MathTex(r'\sum F', '_{cx}', '=', 'm', '_{c}', 'a', '_{cx}', r'\Rightarrow', 'T', '-', 'm', '_{c}',
+                            r'gsin\theta', '=', 'm', '_{c}', 'a', '_{cx}',
                             tex_to_color_map=self.texToColourMap)
+        equationNumber = self.createEquationNumber(1).next_to(equations, RIGHT)
         self.play(Write(equations[0:7]))
         self.wait()
         self.play(Write(equations[7:]))
 
+    def kinematicConstraints(self):
+        pulleyLength = MathTex('l_{1}', '+', 'l_{2}', '+', 'constant', '=', 'Length', r'\\',
+                               tex_to_color_map=self.texToColourMap).shift(RIGHT)
+        pulleyAcceleration = MathTex(r'\Rightarrow', 'a_{1}', '+', 'a_{2}', '=', '0',
+                                     tex_to_color_map=self.texToColourMap).next_to(pulleyLength, DOWN)
+        acceleration1 = MathTex('a_{1}', '=', '-', 'a', '_{cx}', tex_to_color_map=self.texToColourMap)
+        acceleration2 = MathTex('a_{2}', '=', '-', 'a', '_{sy}',
+                                tex_to_color_map=self.texToColourMap).next_to(acceleration1, RIGHT)
+
+        accelerations = VGroup(acceleration1, acceleration2).next_to(pulleyAcceleration, DOWN)
+
+        kinematicConstraints = MathTex(r'\Rightarrow', '-', 'a', '_{sy}', '-', 'a', '_{cx}', '=', '0', r'\Rightarrow',
+                                       'a', '_{cx}', '=', '-', 'a', '_{sy}',
+                                       tex_to_color_map=self.texToColourMap).next_to(accelerations, DOWN)
+        title = Tex("Kinematic Constraints").next_to(pulleyLength, UP)
+
+        equationNumber = self.createEquationNumber(1).next_to(kinematicConstraints, RIGHT)
+        self.accelerationConstraintEquation = VGroup(kinematicConstraints[10:], equationNumber)
+
+        surroundingBox = SurroundingRectangle(self.accelerationConstraintEquation, color=GREEN_A)
+
+        self.play(Write(title))
+        self.play(Write(pulleyLength), run_time=2)
+        self.play(Write(pulleyAcceleration))
+        self.play(Write(accelerations), run_time=1.5)
+        self.play(Write(kinematicConstraints))
+        self.play(Create(equationNumber), Create(surroundingBox))
+        self.play(FadeOut(title), FadeOut(pulleyLength), FadeOut(pulleyAcceleration),
+                  FadeOut(accelerations), FadeOut(kinematicConstraints[0:10]))
+        self.play((self.accelerationConstraintEquation + surroundingBox).animate.shift(4.2 * UP))
+        self.play(FadeOut(surroundingBox))
 
     def construct(self):
-        #self.cartFBD()
+        self.cartFBD() #TODO: Fix error with this
         self.suspendedMassFBD()
+        self.kinematicConstraints()
         self.suspendedCartCalculations()
+
         #self.cartCalculations()
+
+        pass
