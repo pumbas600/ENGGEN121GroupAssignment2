@@ -50,6 +50,7 @@ class FBDs(Scene):
         self.cartHighlightColour = ORANGE
         self.suspendedMassHighlightColour = BLUE
         self.operatorColour = '#fcc088'
+        self.accelerationHighlightColour = GREEN_A
 
         self.texToColourMap = {
             '=': self.operatorColour,
@@ -196,12 +197,28 @@ class FBDs(Scene):
                              ).shift(RIGHT)
         substitutedEquation = MathTex('m', '_{s}', 'a', '_{sy}', '+', 'm', '_{s}', 'g', '-', 'm', '_{c}', r'gsin\theta',
                                       '=', 'm', '_{c}', 'a', '_{cx}', tex_to_color_map=self.texToColourMap).shift(RIGHT)
+        substitutedEquation2 = MathTex('-', 'm', '_{s}', 'a', '_{cx}', '+', 'm', '_{s}', 'g', '-', 'm', '_{c}',
+                                       r'gsin\theta', '=', 'm', '_{c}', 'a', '_{cx}', r'\\', r'\Rightarrow', 'a',
+                                       '_{cx}', '(m', '_{c}', '+', 'm', '_{s}', ') &', '=', 'g(m', '_{s}', '-', 'm',
+                                       '_{c}', r'sin\theta)', r'\\', r'\Rightarrow', 'a', '_{cx}', '& =', r'\frac{g(m',
+                                       '_{s}', '-', 'm', '_{c}', r'sin\theta)', '}{m', '_{c}', '+', 'm', '_{s}}',
+                                       tex_to_color_map=self.texToColourMap).shift(RIGHT)
 
-        equationNumber = FBDs.createEquationNumber(3).next_to(sumForcesX, RIGHT)
+        r"""
+        -m_{s}a_{cx} + m_{s}g - m_{c} gsin\theta & = m _{c} a_{cx}\\
+
+        \Rightarrow a_{cx} (m_{c} + m_{s}) & = g(m_{s} - m_{c} sin\theta)\\
+
+        \Rightarrow a_{cx} & = \frac{g(m_{s} - m_{c} sin\theta)}{m_{c} + m_{s}}
+        """
+
         equationSurroundingBox1 = SurroundingRectangle(sumForcesX[0:7])
         equationSurroundingBox2 = SurroundingRectangle(sumForcesX[8])
         equationSurroundingBox3 = SurroundingRectangle(substitutedEquation[0:8])
         equationSurroundingBox4 = SurroundingRectangle(self.tensionEquation, color=self.suspendedMassHighlightColour)
+        equationSurroundingBox5 = SurroundingRectangle(self.accelerationConstraintEquation, color=self.accelerationHighlightColour)
+        equationSurroundingBox6 = SurroundingRectangle(substitutedEquation[0:4])
+        equationSurroundingBox7 = SurroundingRectangle(substitutedEquation2[0:5])
 
         self.play(Write(sumForcesX[0:7]))
         self.wait()
@@ -212,6 +229,12 @@ class FBDs(Scene):
         self.play(ReplacementTransform(sumForcesX[8:], substitutedEquation),
                   ReplacementTransform(equationSurroundingBox2, equationSurroundingBox3))
         self.play(FadeOut(equationSurroundingBox4))
+        self.play(FadeIn(equationSurroundingBox5),
+                  ReplacementTransform(equationSurroundingBox3, equationSurroundingBox6))
+        self.play(ReplacementTransform(substitutedEquation, substitutedEquation2[0:18]),
+                  ReplacementTransform(equationSurroundingBox6, equationSurroundingBox7))
+        self.play(FadeOut(equationSurroundingBox7), Write(substitutedEquation2[18:]))
+
 
     def kinematicConstraints(self):
         pulleyLength = MathTex('l_{1}', '+', 'l_{2}', '+', 'constant', '=', 'length', r'\\',
@@ -232,7 +255,7 @@ class FBDs(Scene):
         equationNumber = FBDs.createEquationNumber(1).next_to(kinematicConstraints, RIGHT)
         self.accelerationConstraintEquation = VGroup(kinematicConstraints[9:], equationNumber)
 
-        surroundingBox = SurroundingRectangle(self.accelerationConstraintEquation, color=GREEN_A)
+        surroundingBox = SurroundingRectangle(self.accelerationConstraintEquation, color=self.accelerationHighlightColour)
 
         self.play(Write(title))
         self.play(Write(pulleyLength), run_time=2)
