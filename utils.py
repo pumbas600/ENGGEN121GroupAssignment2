@@ -2,9 +2,10 @@ from manim import *
 from typing import Tuple
 
 
-class Equations:
+class Equations(MathTex):
 
     def __init__(self, *equations: str, **kwargs):
+        MathTex.__init__(self, *equations, **kwargs)
         self.__equationIndices = []
 
         for i in range(len(equations)):
@@ -15,7 +16,7 @@ class Equations:
             
             self.__equationIndices.append((start, stop))
 
-        self.__mathTexEquations = MathTex(*equations, **kwargs)
+        #self.__mathTexEquations = MathTex(*equations, **kwargs)
 
     def getEquationIndices(self, index: int or slice) -> Tuple[int, int]:
         if isinstance(index, slice):
@@ -28,5 +29,5 @@ class Equations:
 
     def __getitem__(self, index: int or slice) -> VGroup:
         indices = self.getEquationIndices(index)
-        return self.__mathTexEquations[indices[0]:indices[1]]
+        return MathTex.__getitem__(self, slice(indices[0], indices[1]))
 
