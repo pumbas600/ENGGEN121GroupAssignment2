@@ -39,11 +39,26 @@ class Test(Scene):
         }
 
     def construct(self):
-        equations2 = MathTex('-m_{s}a_{cx}', r'+m_{s}g-m_{c}gsin\theta&=m_{c}a_{cx}\\',
-                               r'\Rightarrow a_{cx}(m_{c}+m_{s})&=g(m_{s}-m_{c}sin\theta)\\',
-                               r'\Rightarrow a_{cx}&={g(m_{s}-m_{c}sin\theta) \over m_{c}+m_{s}}',
-                               tex_to_color_map=self.texToColourMap).shift(RIGHT)
-        self.play(Write(equations2), run_time=2)
+        equation1 = MathTex('-', 'm', '_{s}', 'a', '_{cx}', '+', 'm', '_{s}', 'g', '-', 'm', '_{c}', r'gsin\theta&',
+                            '=', 'm', '_{c}', 'a', '_{cx}', r'\\a', '_{cx}', '(m', '_{c}', '+',
+                            'm', '_{s}', ')&', '=', 'g(', 'm', '_{s}', '-', 'm', '_{c}', r'sin\theta)\\'
+                            'a', '_{cx}', '&', '=', '{g(m', '_{s}', '-', 'm', '_{c}', r'sin\theta)\over ', 'm', '_{c}',
+                            '+', 'm', '_{s}', '}',
+                            arg_separator=' ', tex_to_color_map=self.texToColourMap)
+
+        equation2 = MathTex('-m_{s}a_{cx}', r'+m_{s}g-m_{c}gsin\theta&=m_{c}a_{cx}',
+                            r'\\ a_{cx}(m_{c}+m_{s})&=g(m_{s}-m_{c}sin\theta)',
+                            r'\\ \therefore a_{cx}: &= {g(m_{s}-m_{c}sin\theta)\over m_{c}+m_{s}}',
+                            arg_separator='',
+                            tex_to_color_map=self.texToColourMap)
+
+        #
+        # equation2 = MathTex('-m_{s}a_{cx}', r'+m_{s}g-m_{c}gsin\theta&=m_{c}a_{cx}',
+        #                     '\\\\ a_{cx}(m_{c}+m_{s})&=g(m_{s}-m_{c}sin\\theta)',
+        #                     tex_to_color_map=self.texToColourMap).next_to(equation1, DOWN)
+
+        #self.play(Write(equation1))
+        self.play(Write(equation2))
 
 
 class FBDs(Scene):
@@ -127,7 +142,7 @@ class FBDs(Scene):
         self.play(Write(title), GrowFromCenter(square))
         self.play(FadeIn(weightForce), FadeIn(tensionForce), FadeIn(cs))
         self.play(Write(weightLabel), Write(tensionLabel))
-        self.wait(2)
+        self.wait(1)
         self.play(self.suspendedMassFBDGroup.animate.scale(0.4))
         self.play(self.suspendedMassFBDGroup.animate.shift(LEFT * 5.1 + DOWN * 1.5))
 
@@ -168,7 +183,7 @@ class FBDs(Scene):
         self.play(
             Write(normalLabel), Write(weightLabel), Write(tensionLabel)
         )
-        self.wait(2)
+        self.wait(1)
         self.play(self.cartFBDGroup.animate.scale(0.4))
         self.play(self.cartFBDGroup.animate.shift(LEFT * 5 + UP * 1.5))
 
@@ -208,10 +223,10 @@ class FBDs(Scene):
                              ).shift(RIGHT)
         substitutedEquation = MathTex('m', '_{s}', 'a', '_{sy}', '+', 'm', '_{s}', 'g', '-', 'm', '_{c}', r'gsin\theta',
                                       '=', 'm', '_{c}', 'a', '_{cx}', tex_to_color_map=self.texToColourMap).shift(RIGHT)
-        equations2 = Equations('-m_{s}a_{cx}', r'+m_{s}g-m_{c}gsin\theta=m_{c}a_{cx}',
-                               r'\\ \Rightarrow a_{cx}(m_{c}+m_{s})=g(m_{s}-m_{c}sin\theta)',
-                               r'\\\Rightarrow a_{cx}={ g(m_{s}-m_{c}sin\theta)\over m_{c}+m_{s} }',
-                               tex_to_color_map=self.texToColourMap).shift(RIGHT)
+        equations2 = Equations('-m_{s}a_{cx}', r'+m_{s}g-m_{c}gsin\theta &=m_{c}a_{cx}',
+                               r'\\ a_{cx}(m_{c}+m_{s}) &=g(m_{s}-m_{c}sin\theta)',
+                               r'\\ \therefore a_{cx}: &={g(m_{s}-m_{c}sin\theta)\over m_{c}+m_{s}}',
+                               tex_to_color_map=self.texToColourMap).shift(RIGHT * 2 + DOWN)
 
         equationSurroundingBox1 = SurroundingRectangle(sumForcesX[0:7])
         equationSurroundingBox2 = SurroundingRectangle(sumForcesX[8], color=self.suspendedMassHighlightColour)
@@ -221,12 +236,11 @@ class FBDs(Scene):
         equationSurroundingBox6 = SurroundingRectangle(substitutedEquation[0:4], self.accelerationHighlightColour)
         equationSurroundingBox7 = SurroundingRectangle(equations2[0], self.accelerationHighlightColour)
 
-        self.play(Write(sumForcesX[0:7]))
+        self.play(self.cartFBDGroup.animate.scale(FBDs.FBD_SCALE_FACTOR), Write(sumForcesX[0:7]))
         self.wait()
         self.play(Create(equationSurroundingBox1), Write(sumForcesX[7:]))
         self.play(ReplacementTransform(equationSurroundingBox1, equationSurroundingBox2),
-                  FadeIn(equationSurroundingBox4))
-        self.play(FadeOut(sumForcesX[0:8]))
+                  FadeIn(equationSurroundingBox4), FadeOut(sumForcesX[0:8]))
         self.play(ReplacementTransform(sumForcesX[8:], substitutedEquation),
                   ReplacementTransform(equationSurroundingBox2, equationSurroundingBox3))
         self.play(FadeOut(equationSurroundingBox4))
